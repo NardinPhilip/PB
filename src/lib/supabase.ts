@@ -3,55 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-let supabase: any;
-
-if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project-id') || supabaseAnonKey.includes('your-anon-key')) {
-  console.warn('Supabase environment variables are not properly configured. Please update your .env file with actual Supabase credentials.');
-  // Create a mock client to prevent errors during development
-  const mockClient = {
-    from: () => ({
-      select: () => ({
-        eq: function() { return this; },
-        single: function() { return this; },
-        order: function() { return this; },
-        then: function(resolve: any) { 
-          resolve({ data: [], error: null }); 
-          return this; 
-        }
-      }),
-      insert: () => ({
-        select: function() { return this; },
-        single: function() { return this; },
-        then: function(resolve: any) { 
-          resolve({ data: null, error: new Error('Supabase not configured') }); 
-          return this; 
-        }
-      }),
-      update: () => ({
-        eq: function() { return this; },
-        select: function() { return this; },
-        single: function() { return this; },
-        then: function(resolve: any) { 
-          resolve({ data: null, error: new Error('Supabase not configured') }); 
-          return this; 
-        }
-      }),
-      delete: () => ({
-        eq: function() { return this; },
-        then: function(resolve: any) { 
-          resolve({ error: new Error('Supabase not configured') }); 
-          return this; 
-        }
-      }),
-      eq: function() { return this; },
-      single: function() { return this; },
-      order: function() { return this; }
-    })
-  };
-  supabase = mockClient;
-} else {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validate environment variables
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please check your .env file.');
 }
+
+if (supabaseUrl.includes('your-project-id') || supabaseAnonKey.includes('your-anon-key')) {
+  throw new Error('Please update your .env file with actual Supabase credentials.');
+}
+
+// Create Supabase client
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export { supabase };
 

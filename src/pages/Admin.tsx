@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../contexts/LanguageContext';
+import SupabaseSetup from '../components/SupabaseSetup';
 import { 
   paintingService, 
   Painting, 
@@ -26,6 +27,7 @@ import {
 const Admin: React.FC = () => {
   const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'paintings' | 'pages' | 'settings'>('paintings');
+  const [supabaseReady, setSupabaseReady] = useState(false);
   const [paintings, setPaintings] = useState<Painting[]>([]);
   const [pages, setPages] = useState<PageContent[]>([]);
   const [settings, setSettings] = useState<GallerySetting[]>([]);
@@ -85,8 +87,10 @@ const Admin: React.FC = () => {
   ];
 
   useEffect(() => {
-    loadData();
-  }, [activeTab]);
+    if (supabaseReady) {
+      loadData();
+    }
+  }, [activeTab, supabaseReady]);
 
   const loadData = async () => {
     setLoading(true);
@@ -367,6 +371,19 @@ const Admin: React.FC = () => {
           {language === 'en' ? 'Admin Panel' : 'لوحة الإدارة'}
         </h1>
 
+        {/* Supabase Setup Check */}
+        <SupabaseSetup onComplete={() => setSupabaseReady(true)} />
+
+        {!supabaseReady && (
+          <div className="text-center py-12">
+            <p className="text-neutral-400">
+              Please complete Supabase setup to continue.
+            </p>
+          </div>
+        )}
+
+        {supabaseReady && (
+          <>
         {/* Tabs */}
         <div className="flex space-x-1 mb-8 bg-primary-800 p-1 rounded-lg">
           {tabs.map((tab) => (
@@ -1033,6 +1050,8 @@ const Admin: React.FC = () => {
               )}
             </motion.div>
           </div>
+        )}
+        )}
         )}
       </div>
     </div>
