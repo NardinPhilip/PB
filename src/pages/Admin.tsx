@@ -201,17 +201,13 @@ const Admin: React.FC = () => {
 
     setUploading(true);
     try {
-      // For now, we'll use a placeholder URL since Supabase storage might not be configured
-      // In production, you would implement proper image upload to Supabase Storage
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          // Create a temporary URL for the uploaded image
-          const imageUrl = event.target.result as string;
-          setFormData({ ...formData, image_url: imageUrl });
-        }
-      };
-      reader.readAsDataURL(file);
+      // Create a temporary object URL for preview
+      const imageUrl = URL.createObjectURL(file);
+      setFormData({ ...formData, image_url: imageUrl });
+      
+      // Store the file for potential upload later
+      // In a production environment, you would upload to Supabase Storage here
+      console.log('File selected:', file.name, 'Size:', file.size);
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Error uploading image. Please try again.');
@@ -702,30 +698,40 @@ const Admin: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-300 mb-2">
-                    Image Upload
+                    Image Upload (or URL)
                   </label>
                   <div className="space-y-4">
+                    <div>
+                      <input
+                        type="url"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                        placeholder="Enter image URL or upload file below"
+                        className="w-full bg-primary-700 border border-primary-600 rounded-lg px-4 py-3 text-neutral-100 focus:outline-none focus:border-accent-400"
+                      />
+                    </div>
+                    <div className="text-center text-neutral-500">or</div>
                     <div className="flex items-center space-x-4">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="image-upload"
-                    />
-                    <label
-                      htmlFor="image-upload"
-                      className="bg-primary-600 hover:bg-primary-500 disabled:bg-primary-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center space-x-2 transition-colors"
-                    >
-                      <PhotoIcon className="w-5 h-5" />
-                      <span>{uploading ? 'Uploading...' : 'Choose Image'}</span>
-                    </label>
-                    {formData.image_url && (
-                      <div className="flex items-center space-x-2 text-green-400">
-                        <CheckIcon className="w-5 h-5" />
-                        <span>Image uploaded</span>
-                      </div>
-                    )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="bg-primary-600 hover:bg-primary-500 disabled:bg-primary-700 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center space-x-2 transition-colors"
+                      >
+                        <PhotoIcon className="w-5 h-5" />
+                        <span>{uploading ? 'Processing...' : 'Upload File'}</span>
+                      </label>
+                      {formData.image_url && (
+                        <div className="flex items-center space-x-2 text-green-400">
+                          <CheckIcon className="w-5 h-5" />
+                          <span>Image ready</span>
+                        </div>
+                      )}
                     </div>
                     {formData.image_url && (
                       <div className="mt-4">
@@ -733,6 +739,10 @@ const Admin: React.FC = () => {
                           src={formData.image_url} 
                           alt="Preview" 
                           className="w-32 h-40 object-cover rounded-lg border border-primary-600"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'https://images.pexels.com/photos/1102341/pexels-photo-1102341.jpeg?auto=compress&cs=tinysrgb&w=400';
+                          }}
                         />
                       </div>
                     )}
