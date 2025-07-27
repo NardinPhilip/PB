@@ -33,13 +33,27 @@ const SupabaseSetup: React.FC<SupabaseSetupProps> = ({ onComplete }) => {
 
       // Test the connection
       const { supabase } = await import('../lib/supabase');
-      const { data, error: connectionError } = await supabase
-        .from('paintings')
-        .select('count', { count: 'exact', head: true });
-
-      if (connectionError) {
+      
+      // Check if supabase is properly initialized
+      if (!supabase || typeof supabase.from !== 'function') {
         setStatus('invalid');
-        setError(`Connection failed: ${connectionError.message}`);
+        setError('Supabase client not properly initialized');
+        return;
+      }
+
+      try {
+        const { data, error: connectionError } = await supabase
+          .from('paintings')
+          .select('count', { count: 'exact', head: true });
+
+        if (connectionError) {
+          setStatus('invalid');
+          setError(`Connection failed: ${connectionError.message}`);
+          return;
+        }
+      } catch (dbError) {
+        setStatus('invalid');
+        setError(`Database connection failed: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
         return;
       }
 

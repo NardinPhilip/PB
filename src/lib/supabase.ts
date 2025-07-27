@@ -5,15 +5,34 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env file.');
+  console.warn('Missing Supabase environment variables. Please check your .env file.');
 }
 
 if (supabaseUrl.includes('your-project-id') || supabaseAnonKey.includes('your-anon-key')) {
-  throw new Error('Please update your .env file with actual Supabase credentials.');
+  console.warn('Please update your .env file with actual Supabase credentials.');
 }
 
-// Create Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create Supabase client only if credentials are available
+let supabase: any = null;
+
+if (supabaseUrl && supabaseAnonKey && 
+    !supabaseUrl.includes('your-project-id') && 
+    !supabaseAnonKey.includes('your-anon-key')) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+} else {
+  // Create a mock client that throws helpful errors
+  supabase = {
+    from: () => ({
+      select: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
+      insert: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
+      update: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
+      delete: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
+      eq: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
+      order: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
+      single: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.'))
+    })
+  };
+}
 
 export { supabase };
 
