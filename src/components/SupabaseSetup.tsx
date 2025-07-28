@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { checkSupabaseConnection } from '../lib/supabase';
 
 interface SupabaseSetupProps {
   onComplete?: () => void;
@@ -11,10 +12,13 @@ const SupabaseSetup: React.FC<SupabaseSetupProps> = ({ onComplete }) => {
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    checkSupabaseConnection();
+    checkConnection();
   }, []);
 
-  const checkSupabaseConnection = async () => {
+  const checkConnection = async () => {
+    setStatus('checking');
+    setError('');
+
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -31,34 +35,15 @@ const SupabaseSetup: React.FC<SupabaseSetupProps> = ({ onComplete }) => {
         return;
       }
 
-      // Test the connection
-      const { supabase } = await import('../lib/supabase');
+      const isConnected = await checkSupabaseConnection();
       
-      // Check if supabase is properly initialized
-      if (!supabase || typeof supabase.from !== 'function') {
+      if (isConnected) {
+        setStatus('connected');
+        onComplete?.();
+      } else {
         setStatus('invalid');
-        setError('Supabase client not properly initialized');
-        return;
+        setError('Failed to connect to Supabase. Please check your credentials.');
       }
-
-      try {
-        const { data, error: connectionError } = await supabase
-          .from('paintings')
-          .select('count', { count: 'exact', head: true });
-
-        if (connectionError) {
-          setStatus('invalid');
-          setError(`Connection failed: ${connectionError.message}`);
-          return;
-        }
-      } catch (dbError) {
-        setStatus('invalid');
-        setError(`Database connection failed: ${dbError instanceof Error ? dbError.message : 'Unknown error'}`);
-        return;
-      }
-
-      setStatus('connected');
-      onComplete?.();
     } catch (error) {
       setStatus('invalid');
       setError(error instanceof Error ? error.message : 'Unknown error occurred');
@@ -141,7 +126,7 @@ const SupabaseSetup: React.FC<SupabaseSetupProps> = ({ onComplete }) => {
           </div>
 
           <button
-            onClick={checkSupabaseConnection}
+            onClick={checkConnection}
             className="bg-accent-600 hover:bg-accent-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             Retry Connection

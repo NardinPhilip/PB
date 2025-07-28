@@ -12,74 +12,10 @@ if (supabaseUrl.includes('your-project-id') || supabaseAnonKey.includes('your-an
   console.warn('Please update your .env file with actual Supabase credentials.');
 }
 
-// Create Supabase client only if credentials are available
-let supabase: any = null;
+// Create Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-if (supabaseUrl && supabaseAnonKey && 
-    !supabaseUrl.includes('your-project-id') && 
-    !supabaseAnonKey.includes('your-anon-key')) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-} else {
-  // Create a mock client that throws helpful errors
-  supabase = {
-    from: () => ({
-      select: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
-      insert: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
-      update: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
-      delete: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
-      eq: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
-      order: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.')),
-      single: () => Promise.reject(new Error('Supabase not configured. Please update your .env file.'))
-    })
-  };
-}
-
-export { supabase };
-
-// Page content interface
-export interface PageContent {
-  id: string;
-  slug: string;
-  title_en: string;
-  title_ar?: string;
-  content_en: Record<string, any>;
-  content_ar?: Record<string, any>;
-  meta_description_en?: string;
-  meta_description_ar?: string;
-  is_published: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PageContentInsert {
-  slug: string;
-  title_en: string;
-  title_ar?: string;
-  content_en: Record<string, any>;
-  content_ar?: Record<string, any>;
-  meta_description_en?: string;
-  meta_description_ar?: string;
-  is_published?: boolean;
-}
-
-// Gallery settings interface
-export interface GallerySetting {
-  id: string;
-  name: string;
-  value_en: string;
-  value_ar?: string;
-  description?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface GallerySettingInsert {
-  name: string;
-  value_en: string;
-  value_ar?: string;
-  description?: string;
-}
-
+// Database Types
 export interface Painting {
   id: string;
   title: string;
@@ -117,216 +53,245 @@ export interface PaintingInsert {
   display_order?: number;
 }
 
-// Painting CRUD operations
+export interface PageContent {
+  id: string;
+  slug: string;
+  title_en: string;
+  title_ar?: string;
+  content_en: Record<string, any>;
+  content_ar?: Record<string, any>;
+  meta_description_en?: string;
+  meta_description_ar?: string;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GallerySetting {
+  id: string;
+  name: string;
+  value_en: string;
+  value_ar?: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Painting Service
 export const paintingService = {
   // Get all paintings
   async getAll(): Promise<Painting[]> {
-    const { data, error } = await supabase
-      .from('paintings')
-      .select('*')
-      .order('display_order', { ascending: true });
-    
-    if (error) throw error;
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('paintings')
+        .select('*')
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching paintings:', error);
+      throw error;
+    }
   },
 
   // Get paintings by collection
   async getByCollection(collection: string): Promise<Painting[]> {
-    const { data, error } = await supabase
-      .from('paintings')
-      .select('*')
-      .eq('collection', collection)
-      .order('display_order', { ascending: true });
-    
-    if (error) throw error;
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('paintings')
+        .select('*')
+        .eq('collection', collection)
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching paintings by collection:', error);
+      throw error;
+    }
   },
 
   // Get featured paintings
   async getFeatured(): Promise<Painting[]> {
-    const { data, error } = await supabase
-      .from('paintings')
-      .select('*')
-      .eq('is_featured', true)
-      .order('display_order', { ascending: true });
-    
-    if (error) throw error;
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('paintings')
+        .select('*')
+        .eq('is_featured', true)
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching featured paintings:', error);
+      throw error;
+    }
   },
 
   // Get single painting
   async getById(id: string): Promise<Painting | null> {
-    const { data, error } = await supabase
-      .from('paintings')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('paintings')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching painting by ID:', error);
+      throw error;
+    }
   },
 
   // Create painting
   async create(painting: PaintingInsert): Promise<Painting> {
-    const { data, error } = await supabase
-      .from('paintings')
-      .insert(painting)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('paintings')
+        .insert(painting)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error creating painting:', error);
+      throw error;
+    }
   },
 
   // Update painting
   async update(id: string, painting: Partial<PaintingInsert>): Promise<Painting> {
-    const { data, error } = await supabase
-      .from('paintings')
-      .update({ ...painting, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('paintings')
+        .update({ ...painting, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating painting:', error);
+      throw error;
+    }
   },
 
   // Delete painting
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('paintings')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from('paintings')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting painting:', error);
+      throw error;
+    }
   }
 };
 
-// Page content CRUD operations
+// Page Content Service
 export const pageService = {
-  // Get all pages
-  async getAll(): Promise<PageContent[]> {
-    const { data, error } = await supabase
-      .from('pages')
-      .select('*')
-      .order('slug', { ascending: true });
-    
-    if (error) throw error;
-    return data || [];
-  },
-
   // Get page by slug
   async getBySlug(slug: string): Promise<PageContent | null> {
-    const { data, error } = await supabase
-      .from('pages')
-      .select('*')
-      .eq('slug', slug)
-      .eq('is_published', true)
-      .single();
-    
-    if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
+    try {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('*')
+        .eq('slug', slug)
+        .eq('is_published', true)
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Not found
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      console.error('Error fetching page:', error);
+      return null;
+    }
+  },
+
+  // Get all pages
+  async getAll(): Promise<PageContent[]> {
+    try {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('*')
+        .order('slug', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching pages:', error);
       throw error;
     }
-    return data;
-  },
-
-  // Create page
-  async create(page: PageContentInsert): Promise<PageContent> {
-    const { data, error } = await supabase
-      .from('pages')
-      .insert(page)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  // Update page
-  async update(id: string, page: Partial<PageContentInsert>): Promise<PageContent> {
-    const { data, error } = await supabase
-      .from('pages')
-      .update({ ...page, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  // Delete page
-  async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('pages')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
   }
 };
 
-// Gallery settings CRUD operations
+// Gallery Settings Service
 export const gallerySettingsService = {
-  // Get all settings
-  async getAll(): Promise<GallerySetting[]> {
-    const { data, error } = await supabase
-      .from('gallery_settings')
-      .select('*')
-      .order('name', { ascending: true });
-    
-    if (error) throw error;
-    return data || [];
-  },
-
   // Get setting by name
   async getByName(name: string): Promise<GallerySetting | null> {
-    const { data, error } = await supabase
-      .from('gallery_settings')
-      .select('*')
-      .eq('name', name)
-      .single();
-    
-    if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
+    try {
+      const { data, error } = await supabase
+        .from('gallery_settings')
+        .select('*')
+        .eq('name', name)
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Not found
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      console.error('Error fetching gallery setting:', error);
+      return null;
+    }
+  },
+
+  // Get all settings
+  async getAll(): Promise<GallerySetting[]> {
+    try {
+      const { data, error } = await supabase
+        .from('gallery_settings')
+        .select('*')
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching gallery settings:', error);
       throw error;
     }
-    return data;
-  },
+  }
+};
 
-  // Create setting
-  async create(setting: GallerySettingInsert): Promise<GallerySetting> {
+// Utility function to check Supabase connection
+export const checkSupabaseConnection = async (): Promise<boolean> => {
+  try {
+    if (!supabaseUrl || !supabaseAnonKey || 
+        supabaseUrl.includes('your-project-id') || 
+        supabaseAnonKey.includes('your-anon-key')) {
+      return false;
+    }
+
     const { data, error } = await supabase
-      .from('gallery_settings')
-      .insert(setting)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
+      .from('paintings')
+      .select('count', { count: 'exact', head: true });
 
-  // Update setting
-  async update(id: string, setting: Partial<GallerySettingInsert>): Promise<GallerySetting> {
-    const { data, error } = await supabase
-      .from('gallery_settings')
-      .update({ ...setting, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  },
-
-  // Delete setting
-  async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('gallery_settings')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    return !error;
+  } catch (error) {
+    console.error('Supabase connection check failed:', error);
+    return false;
   }
 };

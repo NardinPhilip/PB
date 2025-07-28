@@ -38,12 +38,7 @@ const Home: React.FC = () => {
       setFeaturedWorks(featured);
     } catch (error) {
       console.error('Error loading featured works:', error);
-      // If table doesn't exist, show empty state instead of error
-      if (error instanceof Error && error.message.includes('relation "public.paintings" does not exist')) {
-        setFeaturedWorks([]);
-        return;
-      }
-      setError('Failed to load featured works');
+      setFeaturedWorks([]);
     } finally {
       setLoading(false);
     }

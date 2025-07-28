@@ -22,11 +22,7 @@ const Gallery: React.FC = () => {
       setPaintings(data);
     } catch (error) {
       console.error('Error loading paintings:', error);
-      // If table doesn't exist, show empty state instead of error
-      if (error instanceof Error && error.message.includes('relation "public.paintings" does not exist')) {
-        setPaintings([]);
-        return;
-      }
+      setPaintings([]);
     } finally {
       setLoading(false);
     }
